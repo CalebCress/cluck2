@@ -11,6 +11,7 @@ const app = express()
 app.use(cors())
 const server_port = 4000
 let loggedIn = {}
+const publicDirPath = "./public"
 
 //// INIT SPREADSHEET
 import { GoogleSpreadsheet } from "google-spreadsheet"
@@ -64,6 +65,8 @@ function addLog(timestamp, user, clockIn, outstandingLogout) {
 }
 
 ////API
+
+
 app.get('/ping', (req, res) => {
     res.send("server online")
 })
@@ -104,6 +107,9 @@ app.get(['/timesheet', '/loggedin'], (req, res) => {
     res.send(loggedIn)
 })
 
+app.use(express.static(publicDirPath))
+
+//Logging
 function logMember(name, loggedIn) {
     let logged = JSON.parse(fs.readFileSync("members.log.json"))
     logged.logTotal += 1
