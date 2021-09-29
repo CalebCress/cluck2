@@ -2,14 +2,24 @@ function sleep(milis) { return new Promise(res => setTimeout(res, milis)) }
 
 import express from 'express'
 import cors from 'cors'
+import bodyParser from 'body-parser'
 import fs from 'fs'
 import { MongoClient } from 'mongodb'
 import session from 'express-session'
+import path from 'path'
 
 const client = new MongoClient("mongodb://localhost:27017/")
 let database
 const app = express()
+
 app.use(cors())
+app.use(bodyParser.urlencoded({extended : true}));
+app.use(bodyParser.json());
+app.use(session({
+	secret: '1540FlamingChickens',
+	resave: true,
+	saveUninitialized: true
+}))
 const server_port = 4000
 let loggedIn = {}
 const publicDirPath = "./public"
@@ -67,31 +77,36 @@ app.get('/ping', (req, res) => {
 })
 
 app.post('/clockapi/clock', (req, res) => {
-    try {
-        let name = req.query.user
-        let loggingin = req.query.clockingIn
-
-        if (loggingin === "true") {
-            // Log In
-            logMember(name, true)
-            if (!loggedIn[name]) { loggedIn[name] = Date.now() }
-            res.end()
-            db.collection("users").updateOne({_id: name, inNow: true})
-            console.log(`${name} clocked in`)
-        } else {
-            // Log Out
-            if (loggedIn[name]) { // Test to make sure person is logged in
-                logMember(name, false)
+    if (req.session.loggedin) {
+		try {
+            let name = req.query.user
+            let loggingin = req.query.clockingIn
+    
+            if (loggingin === "true") {
+                // Log In
+                logMember(name, true)
+                if (!loggedIn[name]) { loggedIn[name] = Date.now() }
                 res.end()
-                addLabHours(name, (Date.now() - loggedIn[name]) / 3600000)
-                delete loggedIn[name]
-                db.collection("users").updateOne({_id: name, inNow: false})
-                console.log(`${name} clocked out`)
-            } else { res.end() }
+                db.collection("users").updateOne({_id: name, inNow: true})
+                console.log(`${name} clocked in`)
+            } else {
+                // Log Out
+                if (loggedIn[name]) { // Test to make sure person is logged in
+                    logMember(name, false)
+                    res.end()
+                    addLabHours(name, (Date.now() - loggedIn[name]) / 3600000)
+                    delete loggedIn[name]
+                    db.collection("users").updateOne({_id: name, inNow: false})
+                    console.log(`${name} clocked out`)
+                } else { res.end() }
+            }
+        } finally {
+            res.send(200)
         }
-    } finally {
-        res.send(200)
-    }
+
+	} else {
+		res.send('Please login to view this page!');
+	}
 })
 
 app.get('/void', (req, res) => {
@@ -102,26 +117,46 @@ app.get(['/timesheet', '/loggedin'], (req, res) => {
     res.send(loggedIn)
 })
 
-app.post('/auth', function(request, response) {
-    var username = request.body.username
-    var password = request.body.password
+app.post('/auth', function(req, res) {
+    var username = req.body.username
+    var password = req.body.password
     if (username && password) {
-        database.collection("credentials").findOne({_id:username, password},function(error, results, fields) {
-            if (results.length > 0) {
-                request.session.loggedin = true
-                request.session.username = username
-                response.redirect('/home')
+        database.collection("credentials").findOne({_id:username, password}, (error, result) => {
+            if (result != null) {
+                req.session.loggedin = true
+                req.session.username = username
+                res.redirect('/admin')
             } else {
-                response.send('Incorrect Username and/or Password!')
+                res.send('Incorrect Username and/or Password!')
             }			
-            response.end()
-        });
+        })
     } else {
-        response.send('Please enter Username and Password!')
-        response.end()
+        res.send('Please enter Username and Password!')
     }
 })
+
 //webserver
+app.get('/admin', (req, res) => {
+    if (req.session.loggedin) {
+		res.sendFile(path.resolve('./pages/admin.html'))
+	} else {
+		res.redirect('/login')
+	}
+})
+
+app.get('/timeclock', (req, res) => {
+    if (req.session.loggedin) {
+		res.sendFile(path.resolve('./pages/timeclock.html'))
+	} else {
+		res.redirect('/login')
+	}
+})
+
+
+app.get('/login', (req, res) => {
+    res.sendFile(path.resolve('./pages/login.html'))
+})
+
 app.use(express.static(publicDirPath))
 
 //Logging
@@ -141,14 +176,15 @@ function logMember(name, loggedIn) {
 //start server
 async function run() {
     try{
+        console.log("connecting to database...")
         await client.connect()
-        console.log("connected to database...")
         database = client.db("cluck2")
         loggedIn = database.collection("users").find({inNow: true})
         app.listen(server_port, (err) => { console.log(`listening: ${server_port} | err: ${err !== undefined ? err : "none"}`) })
     } finally {
         console.log("connection complete")
     }
+
 }
 
 run().catch(console.dir)
