@@ -65,6 +65,10 @@ function addLog(timestamp, user, clockIn, outstandingLogout) {
 }
 
 ////API
+app.get('/ping', (req, res) => {
+    res.send("server online")
+})
+
 app.post('/clockapi/clock', (req, res) => {
     try {
         let name = req.query.user
@@ -135,11 +139,11 @@ function logMember(name, loggedIn) {
 async function run() {
     try{
         await client.connect()
-        console.log("connected to database")
+        console.log("connected to database...")
         database = client.db("cluck2")
         app.listen(server_port, (err) => { console.log(`listening: ${server_port} | err: ${err !== undefined ? err : "none"}`) })
     } finally {
-        console.log("done")
+        console.log("connection complete")
     }
 }
 
