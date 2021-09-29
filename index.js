@@ -73,15 +73,12 @@ app.post('/clockapi/clock', (req, res) => {
         let name = req.query.user
         let loggingin = req.query.clockingIn
 
-        if (!name || !loggingin) { res.status(400).send('Must include name string and loggingin boolean in URL query').end(); return }
         if (loggingin === "true") {
             // Log In
             logMember(name, true)
             if (!loggedIn[name]) { loggedIn[name] = Date.now() }
             res.end()
-            try {
-                fs.writeFileSync('loggedin.json', JSON.stringify(loggedIn))
-            } catch (error) { console.log(error) }
+            db.collection("users").updateOne({_id: name, inNow: true})
             console.log(`${name} clocked in`)
         } else {
             // Log Out
@@ -90,9 +87,7 @@ app.post('/clockapi/clock', (req, res) => {
                 res.end()
                 addLabHours(name, (Date.now() - loggedIn[name]) / 3600000)
                 delete loggedIn[name]
-                try {
-                    fs.writeFileSync('loggedin.json', JSON.stringify(loggedIn))
-                } catch (error) { console.log(error) }
+                db.collection("users").updateOne({_id: name, inNow: false})
                 console.log(`${name} clocked out`)
             } else { res.end() }
         }
@@ -119,7 +114,6 @@ function logMember(name, loggedIn) {
         loggedIn: loggedIn,
         time: Date.now()
     }
-    fs.writeFileSync('members.log.json', JSON.stringify(logged))
     addLog(time, name, loggedIn, false)
 }
 
