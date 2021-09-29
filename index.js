@@ -105,12 +105,11 @@ app.post('/clockapi/clock', (req, res) => {
 app.get('/void', (req, res) => {
     res.end()
 })
-app.get('/loggedin', (req, res) => {
+
+app.get(['/timesheet', '/loggedin'], (req, res) => {
     res.send(loggedIn)
-    res.end()
 })
 
-// Start server
 function logMember(name, loggedIn) {
     let logged = JSON.parse(fs.readFileSync("members.log.json"))
     logged.logTotal += 1
@@ -135,7 +134,7 @@ function logMember(name, loggedIn) {
     }
 })()
 
-
+//start server
 async function run() {
     try{
         await client.connect()
