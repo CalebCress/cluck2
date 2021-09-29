@@ -65,32 +65,36 @@ function addLog(timestamp, user, clockIn, outstandingLogout) {
 }
 
 ////API
-app.get('/clock/', (req, res) => {
-    // Get and check args
-    let name = req.query.name
-    let loggingin = req.query.loggingin
-    if (!name || !loggingin) { res.status(400).send('Must include name string and loggingin boolean in URL query').end(); return }
-    if (loggingin === "true") {
-        // Log In
-        logMember(name, true)
-        if (!loggedIn[name]) { loggedIn[name] = Date.now() }
-        res.end()
-        try {
-            fs.writeFileSync('loggedin.json', JSON.stringify(loggedIn))
-        } catch (error) { console.log(error) }
-        console.log(`${name} clocked in`)
-    } else {
-        // Log Out
-        if (loggedIn[name]) { // Test to make sure person is logged in
-            logMember(name, false)
+app.post('/clockapi/clock', (req, res) => {
+    try {
+        let name = req.query.user
+        let loggingin = req.query.clockingIn
+
+        if (!name || !loggingin) { res.status(400).send('Must include name string and loggingin boolean in URL query').end(); return }
+        if (loggingin === "true") {
+            // Log In
+            logMember(name, true)
+            if (!loggedIn[name]) { loggedIn[name] = Date.now() }
             res.end()
-            addLabHours(name, (Date.now() - loggedIn[name]) / 3600000)
-            delete loggedIn[name]
             try {
                 fs.writeFileSync('loggedin.json', JSON.stringify(loggedIn))
             } catch (error) { console.log(error) }
-            console.log(`${name} clocked out`)
-        } else { res.end() }
+            console.log(`${name} clocked in`)
+        } else {
+            // Log Out
+            if (loggedIn[name]) { // Test to make sure person is logged in
+                logMember(name, false)
+                res.end()
+                addLabHours(name, (Date.now() - loggedIn[name]) / 3600000)
+                delete loggedIn[name]
+                try {
+                    fs.writeFileSync('loggedin.json', JSON.stringify(loggedIn))
+                } catch (error) { console.log(error) }
+                console.log(`${name} clocked out`)
+            } else { res.end() }
+        }
+    } finally {
+        res.send(200)
     }
 })
 
