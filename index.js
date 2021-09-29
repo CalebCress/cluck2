@@ -11,7 +11,6 @@ const app = express()
 app.use(cors())
 const server_port = 4000
 let loggedIn = {}
-if (fs.existsSync('loggedin.json')) { loggedIn = JSON.parse(fs.readFileSync('loggedin.json')) }
 
 //// INIT SPREADSHEET
 import { GoogleSpreadsheet } from "google-spreadsheet"
@@ -124,22 +123,13 @@ function logMember(name, loggedIn) {
     addLog(time, name, loggedIn, false)
 }
 
-// Periodically save
-(async () => {
-    while (true) {
-        await sleep(5000)
-        try {
-            fs.writeFileSync('loggedin.json', JSON.stringify(loggedIn))
-        } catch (error) { console.log(error) }
-    }
-})()
-
 //start server
 async function run() {
     try{
         await client.connect()
         console.log("connected to database...")
         database = client.db("cluck2")
+        loggedIn = database.collection("users").find({inNow: true})
         app.listen(server_port, (err) => { console.log(`listening: ${server_port} | err: ${err !== undefined ? err : "none"}`) })
     } finally {
         console.log("connection complete")
