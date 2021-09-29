@@ -28,7 +28,6 @@ Each credential document contains the following fields:
 
 * `_id`: The username of the credential.
 * `password`: The encoded (hashed) password of the credential.
-* `accessLevel`: The access level of the credential (`TIMECLOCK`, `TIMESHEET`, or `ADMIN`).
 
 #### Logging
 

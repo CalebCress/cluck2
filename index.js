@@ -4,6 +4,7 @@ import express from 'express'
 import cors from 'cors'
 import fs from 'fs'
 import { MongoClient } from 'mongodb'
+import session from 'express-session'
 
 const client = new MongoClient("mongodb://localhost:27017/")
 let database
@@ -47,13 +48,9 @@ async function addLabHours(name, hours) {
 }
 
 ////Database Functions
-function addCredentials (id, pass, access) {
-    if (["TIMECLOCK", "TIMESHEET", "ADMIN"].indexOf(access) == -1) {
-        console.log("Acess must be TIMECLOCK, TIMESHEET, or ADMIN")
-    }
-    else {
-        database.collection("credentials").insertOne({_id: id, password: pass, accessLevel: access})
-    }
+function addCredentials (id, pass) {
+    database.collection("credentials").insertOne({_id: id, password: pass})
+    
 }
 
 function addUser (id, email, clockEvents, inNow) {
@@ -105,6 +102,25 @@ app.get(['/timesheet', '/loggedin'], (req, res) => {
     res.send(loggedIn)
 })
 
+app.post('/auth', function(request, response) {
+    var username = request.body.username
+    var password = request.body.password
+    if (username && password) {
+        database.collection("credentials").findOne({_id:username, password},function(error, results, fields) {
+            if (results.length > 0) {
+                request.session.loggedin = true
+                request.session.username = username
+                response.redirect('/home')
+            } else {
+                response.send('Incorrect Username and/or Password!')
+            }			
+            response.end()
+        });
+    } else {
+        response.send('Please enter Username and Password!')
+        response.end()
+    }
+})
 //webserver
 app.use(express.static(publicDirPath))
 
