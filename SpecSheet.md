@@ -29,3 +29,14 @@ Each credential document contains the following fields:
 * `_id`: The username of the credential.
 * `password`: The encoded (hashed) password of the credential.
 * `accessLevel`: The access level of the credential (`TIMECLOCK`, `TIMESHEET`, or `ADMIN`).
+
+#### Logging
+
+The backend stores an event history in a collection called `log`.
+
+Each log contains the following fields:
+
+- `timestamp`: The time of the event, in milliseconds from the UNIX epoch.
+- `user`: The username or name.
+- `clockIn`: Boolean if user was clocking in (false if clocking out)
+- `outstandingLogout`: User didn't log out before midnight.
