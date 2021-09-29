@@ -65,8 +65,6 @@ function addLog(timestamp, user, clockIn, outstandingLogout) {
 }
 
 ////API
-
-
 app.get('/ping', (req, res) => {
     res.send("server online")
 })
@@ -107,6 +105,7 @@ app.get(['/timesheet', '/loggedin'], (req, res) => {
     res.send(loggedIn)
 })
 
+//webserver
 app.use(express.static(publicDirPath))
 
 //Logging
