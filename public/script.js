@@ -3,6 +3,17 @@ let buttonJustPressed = false;
 const clock = clockapi.clock
 const cluckedIn = clockapi.cluckedIn
 
+const buttonStates = {
+    false: [
+        { styleName: 'filter', val: 'grayscale(100%)' },
+        { styleName: 'box-shadow', val: 'inset 0 0 0 1000px rgba(255, 255, 255, 0.4), 0px 0px 10px rgba(255, 0, 0,.5)' },
+    ],
+    true: [
+        { styleName: 'filter', val: 'grayscale(0%)' },
+        { styleName: 'box-shadow', val: 'inset 0 0 0 1000px rgba(255, 255, 255, 0.0), 0px 0px 15px 7px rgb(0, 255, 136)' },
+    ]
+}
+
 function render() {
     // Calculate & Set grid size
     root = Math.sqrt(members.length)
@@ -33,18 +44,6 @@ function render() {
     }
     const styleCatagories = [horizPos, verticalPos, font]
 
-    // Button toggling on and off styling
-    const buttonStates = {
-        false: [
-            { styleName: 'filter', val: 'grayscale(100%)' },
-            { styleName: 'box-shadow', val: 'inset 0 0 0 1000px rgba(255, 255, 255, 0.4), 0px 0px 10px rgba(255, 0, 0,.5)' },
-        ],
-        true: [
-            { styleName: 'filter', val: 'grayscale(0%)' },
-            { styleName: 'box-shadow', val: 'inset 0 0 0 1000px rgba(255, 255, 255, 0.0), 0px 0px 15px 7px rgb(0, 255, 136)' },
-        ]
-    }
-
     // Make member buttons 
     members.forEach(member => {
         // Init button
@@ -55,6 +54,7 @@ function render() {
         // Set click toggle
         memberButton.onclick = (click) => {
             buttonJustPressed = true;
+            console.log(click)
             // Go up path to find button object
             click.path.forEach(button => {
                 if (button.className != 'button-in') { return }

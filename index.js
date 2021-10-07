@@ -21,7 +21,7 @@ app.use(session({
 	saveUninitialized: true
 }))
 const server_port = 4000
-let loggedIn = {}
+let loggedIn = {test: "anything"}
 const publicDirPath = "./public"
 
 //// INIT SPREADSHEET
@@ -77,7 +77,7 @@ app.get('/ping', (req, res) => {
 })
 
 app.post('/clockapi/clock', (req, res) => {
-    if (req.session.loggedin) {
+    // if (req.session.loggedin) {
 		try {
             let name = req.query.user
             let loggingin = req.query.clockingIn
@@ -104,9 +104,9 @@ app.post('/clockapi/clock', (req, res) => {
             res.send(200)
         }
 
-	} else {
-		res.send('Please login to view this page!');
-	}
+	// } else {
+	// 	res.send('Please login to view this page!');
+	// }
 })
 
 app.get('/void', (req, res) => {
